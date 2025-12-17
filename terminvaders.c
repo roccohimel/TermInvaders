@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <string.h>
+#include <time.h>
 
 
 // check for keys pressed insted of input
@@ -29,6 +31,12 @@ void plot(int x, int y, char *z) {
         if (x < 1) x = 1;
         if (y < 1) y = 1;
         printf("\033[%d;%dH%s", y, x, z);
+}
+
+void ploti(int x, int y, int z) {
+        if (x < 1) x = 1;
+        if (y < 1) y = 1;
+        printf("\033[%d;%dH%d", y, x, z);
 }
 
 // main
@@ -59,6 +67,17 @@ int main() {
         char *bulletChar = "o";
         int bulletActive = 0;
 
+	srand(time(NULL));
+        int enemyPositionX = 2 + (rand() % maxScreenX - 2);
+        int enemyPositionY = 10;
+        char *enemyChar = "X";
+        
+      	int scoreValue = 0;
+       	char *scoreMessage = "SCORE: ";
+       	
+       	char *helpMessage = "'q' to quit, 'a' and 'd' to move";
+       	char *sepMessage = "|";
+        
         // game loop
         while (1) {
                 printf("\033[H\033[J");
@@ -70,6 +89,11 @@ int main() {
 
                 // plot characters
                 plot(tankPositionX, tankPositionY, tankChar);
+                plot(enemyPositionX, enemyPositionY, enemyChar);
+		plot(1, 1, scoreMessage);
+		ploti(8, 1, scoreValue);
+		plot(maxScreenX / 2, 1, sepMessage);
+		plot(maxScreenX - strlen(helpMessage), 1, helpMessage);
 
                 // if bulletActive, y--
                 if (bulletActive) {
@@ -77,6 +101,12 @@ int main() {
 
                         if (bulletPositionY <= 1) {
                                 bulletActive = 0;
+			}
+			if (bulletPositionY == enemyPositionY && bulletPositionX == enemyPositionX) {
+				scoreValue++;
+				enemyPositionX = rand() % maxScreenX;
+				bulletActive = 0;                              
+
                         } else {
                                 plot(bulletPositionX, bulletPositionY, bulletChar);
                         }
@@ -89,7 +119,6 @@ int main() {
                 // controls
                 if (input == 'a') tankPositionX--;
                 if (input == 'd') tankPositionX++;
-
                 if (input == ' ' && !bulletActive) {
                         bulletActive = 1;
                         bulletPositionX = tankPositionX + 1;
